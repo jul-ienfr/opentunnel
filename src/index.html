@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTunnel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>OpenTunnel</h1>
+                <span class="version">v0.1.0</span>
+            </div>
+            <div class="header-right">
+                <button id="btn-start-all" class="btn btn-sm btn-success" title="Start All">
+                    &#9654; All
+                </button>
+                <button id="btn-stop-all" class="btn btn-sm btn-danger" title="Stop All">
+                    &#9632; All
+                </button>
+                <button id="btn-import" class="btn btn-sm btn-secondary" title="Import PuTTY Sessions">
+                    Import PuTTY
+                </button>
+                <button id="btn-settings" class="btn btn-sm btn-secondary" title="Settings">
+                    &#9881;
+                </button>
+            </div>
+        </header>
+
+        <!-- Tunnel List -->
+        <main class="main">
+            <div class="tunnel-list" id="tunnel-list">
+                <div class="empty-state" id="empty-state">
+                    <p>No tunnels configured</p>
+                    <p class="hint">Click + to add your first SSH tunnel</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Add Button (FAB) -->
+        <button id="btn-add" class="fab" title="Add Tunnel (Ctrl+N)">+</button>
+
+        <!-- Log Panel -->
+        <div class="log-panel" id="log-panel">
+            <div class="log-header">
+                <span>Logs</span>
+                <div>
+                    <button id="btn-clear-logs" class="btn btn-sm btn-secondary">Clear</button>
+                    <button id="btn-toggle-logs" class="btn btn-sm btn-secondary">&#9660;</button>
+                </div>
+            </div>
+            <div class="log-content" id="log-content"></div>
+        </div>
+
+        <!-- Modal: Tunnel Form -->
+        <div class="modal" id="modal-tunnel" style="display:none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-title">Add Tunnel</h2>
+                    <button class="btn-close" id="btn-modal-close">&times;</button>
+                </div>
+                <form id="tunnel-form">
+                    <input type="hidden" id="tunnel-id">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tunnel-name">Name</label>
+                            <input type="text" id="tunnel-name" required placeholder="My Server">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label for="tunnel-host">SSH Host</label>
+                            <input type="text" id="tunnel-host" required placeholder="192.168.1.100">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="tunnel-port">SSH Port</label>
+                            <input type="number" id="tunnel-port" value="22" min="1" max="65535">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="tunnel-username">Username</label>
+                            <input type="text" id="tunnel-username" required placeholder="root">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label for="tunnel-auth">Authentication</label>
+                            <select id="tunnel-auth">
+                                <option value="key">SSH Key</option>
+                                <option value="password">Password</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-2" id="key-path-group">
+                            <label for="tunnel-keypath">Key Path</label>
+                            <input type="text" id="tunnel-keypath" placeholder="C:\Users\me\.ssh\id_rsa">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="tunnel-type">Type</label>
+                            <select id="tunnel-type">
+                                <option value="local">Local (L)</option>
+                                <option value="remote">Remote (R)</option>
+                                <option value="dynamic">Dynamic (D)</option>
+                            </select>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="tunnel-localport">Local Port</label>
+                            <input type="number" id="tunnel-localport" required min="1" max="65535" placeholder="8080">
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="remote-group">
+                        <div class="form-group flex-2">
+                            <label for="tunnel-remotehost">Remote Host</label>
+                            <input type="text" id="tunnel-remotehost" value="127.0.0.1" placeholder="127.0.0.1">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="tunnel-remoteport">Remote Port</label>
+                            <input type="number" id="tunnel-remoteport" min="1" max="65535" placeholder="80">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="tunnel-autoconnect">
+                            Auto-connect on startup
+                        </label>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="btn-cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-save">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal: Settings -->
+        <div class="modal" id="modal-settings" style="display:none">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <button class="btn-close" id="btn-settings-close">&times;</button>
+                </div>
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label for="settings-plink">plink.exe Path</label>
+                        <input type="text" id="settings-plink" placeholder="plink.exe">
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-reconnect">Reconnect Delay (seconds)</label>
+                        <input type="number" id="settings-reconnect" min="1" max="300" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-maxretry">Max Reconnect Attempts (0 = unlimited)</label>
+                        <input type="number" id="settings-maxretry" min="0" value="0">
+                    </div>
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="settings-autostart">
+                            Start with Windows
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="settings-minimized" checked>
+                            Start minimized to tray
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="settings-notify-disconnect" checked>
+                            Notify on disconnect
+                        </label>
+                    </div>
+                    <div class="form-row">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="settings-notify-reconnect" checked>
+                            Notify on reconnect
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="btn-settings-cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
